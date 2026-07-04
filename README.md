@@ -1,8 +1,12 @@
 # VPN Site-to-Site GRE sobre IPsec (IKEv2)
 
+Video de referencia: https://www.youtube.com/watch?v=e4mLPgtiU6Q
+
 ## Descripción
 
 Igual que el escenario anterior, pero la negociación se realiza con **IKEv2** (`crypto ikev2 proposal/policy/keyring/profile`) en lugar de `crypto isakmp`. El túnel `Tunnel0` sigue siendo GRE (`tunnel mode gre ip`) y se protege mediante `crypto map` con ACL que selecciona el tráfico GRE entre los peers, referenciando el `ikev2-profile`.
+
+
 
 ## Topología
 
