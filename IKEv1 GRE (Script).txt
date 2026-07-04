@@ -1,0 +1,104 @@
+! ==========================================
+! ISP
+! ==========================================
+interface e0/0
+ ip address 20.6.82.1 255.255.255.252
+ no shutdown
+
+interface e0/1
+ ip address 20.6.82.5 255.255.255.252
+ no shutdown
+
+! ==========================================
+! Peer A
+! ==========================================
+interface e0/0
+ ip address 20.6.82.2 255.255.255.252
+ no shutdown
+
+interface e0/1
+ ip address 10.6.82.1 255.255.255.128
+ no shutdown
+
+ip route 0.0.0.0 0.0.0.0 20.6.82.1
+
+crypto isakmp policy 10
+ encryption aes 256
+ hash sha256
+ authentication pre-share
+ group 14
+ lifetime 86400
+
+crypto isakmp key CLAVE0682 address 20.6.82.6
+
+crypto ipsec transform-set TS0682 esp-aes 256 esp-sha256-hmac
+ mode tunnel
+
+ip access-list extended GRE-ACL
+ permit gre host 20.6.82.2 host 20.6.82.6
+
+crypto map MAPGRE 10 ipsec-isakmp
+ set peer 20.6.82.6
+ set transform-set TS0682
+ match address GRE-ACL ! [cite: 16]
+
+interface Tunnel0
+ ip address 30.6.82.1 255.255.255.252
+ tunnel source e0/0
+ tunnel destination 20.6.82.6
+ tunnel mode gre ip
+
+interface e0/0
+ crypto map MAPGRE
+
+ip route 10.6.82.128 255.255.255.128 Tunnel0
+
+! ==========================================
+! Peer B
+! ==========================================
+interface e0/0
+ ip address 20.6.82.6 255.255.255.252
+ no shutdown
+
+interface e0/1
+ ip address 10.6.82.129 255.255.255.128
+ no shutdown
+
+ip route 0.0.0.0 0.0.0.0 20.6.82.5
+
+crypto isakmp policy 10
+ encryption aes 256
+ hash sha256
+ authentication pre-share
+ group 14
+ lifetime 86400
+
+crypto isakmp key CLAVE0682 address 20.6.82.2
+
+crypto ipsec transform-set TS0682 esp-aes 256 esp-sha256-hmac
+ mode tunnel
+
+ip access-list extended GRE-ACL
+ permit gre host 20.6.82.6 host 20.6.82.2
+
+crypto map MAPGRE 10 ipsec-isakmp ! [cite: 17]
+ set peer 20.6.82.2
+ set transform-set TS0682
+ match address GRE-ACL
+
+interface Tunnel0
+ ip address 30.6.82.2 255.255.255.252
+ tunnel source e0/0
+ tunnel destination 20.6.82.2
+ tunnel mode gre ip
+
+interface e0/0
+ crypto map MAPGRE
+
+ip route 10.6.82.0 255.255.255.128 Tunnel0
+
+! ==========================================
+! VPCS (PCs)
+! ==========================================
+! PC1: ip 10.6.82.10/25 10.6.82.1
+! PC2: ip 10.6.82.138/25 10.6.82.129
